@@ -1,0 +1,14 @@
+<html>
+<body>
+<canvas width="800" height="800" id="canvas"></canvas>
+<script src="asteroids.js"></script>
+<script src="keymaster.min.js"></script>
+<script>
+var canvasEl = document.getElementById('canvas');
+var ctx = canvasEl.getContext("2d");
+var game = new Game(10, canvas);
+game.start(ctx);
+</script>
+
+</body>
+</html>
