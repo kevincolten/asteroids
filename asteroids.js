@@ -21,9 +21,9 @@ MovingObject.prototype.update = function(velocity) {
 }
 
 MovingObject.prototype.offScreen = function() {
-	if(this.position["x"] > 800 || this.position["x"] < 0) {
+	if(this.position["x"] > 1880 || this.position["x"] < 0) {
 		return true;
-	} else if(this.position["y"] > 800 || this.position["y"] < 0) {
+	} else if(this.position["y"] > 1000 || this.position["y"] < 0) {
 		return true;
 	} else {
 		return false;
@@ -32,13 +32,13 @@ MovingObject.prototype.offScreen = function() {
 
 MovingObject.prototype.fixOffScreen = function() {
 	if (this.position["x"] < 0) {
-			this.position["x"] += 800;
-	} else if(this.position["x"] > 800) {
-			this.position["x"] -= 800;
+			this.position["x"] += 1880;
+	} else if(this.position["x"] > 1880) {
+			this.position["x"] -= 1880;
 	} else if(this.position["y"] < 0) {
-			this.position["y"] += 800;
-	} else if(this.position["y"] > 800) {
-			this.position["y"] -= 800;
+			this.position["y"] += 1000;
+	} else if(this.position["y"] > 1000) {
+			this.position["y"] -= 1000;
 	}
 }
 
@@ -55,8 +55,8 @@ Asteroid.inherits(MovingObject);
 
 Asteroid.prototype.randomAsteroid = function() {
 	var position = {
-		x : getRandomInt(0, 800),
-		y : getRandomInt(0, 800),
+		x : getRandomInt(0, 1880),
+		y : getRandomInt(0, 1000),
 	}
 	var newAsteroid = new Asteroid(position);
 	return newAsteroid;
@@ -73,7 +73,7 @@ function Game(numAsteroids) {
 }
 
 Game.prototype.draw = function (ctx) {
-	ctx.clearRect(0, 0, 800, 800);
+	ctx.clearRect(0, 0, 1880, 1000);
 	for(var i = 0, len = this.asteroids.length; i < len; i++ ){
 		this.asteroids[i].draw(ctx);
 	};
