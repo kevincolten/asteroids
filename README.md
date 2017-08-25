@@ -1,8 +1,21 @@
-asteroids
+Asteroids!
 =========
 
-Fully Functional Less Bullets. Totally Zen Though.
+[Demo](https://kevincolten.github.io/asteroids)
 
-Learning Canvas. Fun.
-
-Dimensions set to 1880 x 1000
+html```
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <script src="https://cdn.rawgit.com/yoannmoinet/nipplejs/master/dist/nipplejs.min.js"></script>
+  <script src="https://cdn.rawgit.com/kevincolten/asteroids/master/asteroids.js"></script>
+  <script>
+    const game = new Asteroids(10, 'canvas');
+    game.start();
+  </script>
+</body>
+</html>
+```
