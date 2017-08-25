@@ -1,209 +1,219 @@
+let manager, windowHeight, windowWidth, ctx;
+  
 function getRandomInt (min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-Function.prototype.inherits = function (BaseClass) {
-  function Surrogate () {};
-  Surrogate.prototype = BaseClass.prototype;
-  this.prototype = new Surrogate();
-};
+class MovingObject {
+  constructor(position, velocity) {
+    this.position = position;
+    this.velocity = velocity;
+  }
 
+  update(velocity) {
+    this.position = {
+      x: this.position.x + this.velocity.x,
+      y: this.position.y + this. velocity.y
+    };
+  }
 
-function MovingObject(position) {
-	this.position = position;
-};
+  offScreen() {
+    if (this.position.x > windowWidth || this.position.x < 0) {
+      return true;
+    } else if (this.position.y > windowHeight || this.position.y < 0) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 
-MovingObject.prototype.update = function(velocity) {
-	this.position = {
-		x: (this.position["x"] + velocity["x"]),
-		y: (this.position["y"] + velocity["y"])
-	};
+  fixOffScreen() {
+    if (this.position.x < 0) {
+        this.position.x += windowWidth;
+    } else if(this.position.x > windowWidth) {
+        this.position.x -= windowWidth;
+    } else if(this.position.y < 0) {
+        this.position.y += windowHeight;
+    } else if(this.position.y > windowHeight) {
+        this.position.y -= windowHeight;
+    }
+  }
 }
 
-MovingObject.prototype.offScreen = function() {
-	if(this.position["x"] > 1880 || this.position["x"] < 0) {
-		return true;
-	} else if(this.position["y"] > 1000 || this.position["y"] < 0) {
-		return true;
-	} else {
-		return false;
-	}
+class Asteroid extends MovingObject {
+  constructor(position, velocity, radius) {
+    super(position, velocity);
+    this.radius = radius;
+  }
+
+  draw(ctx) {
+    ctx.fillStyle = "black";
+    ctx.beginPath();
+  
+    ctx.arc(
+      this.position.x,
+      this.position.y,
+      this.radius,
+      0,
+      2 * Math.PI,
+      false
+    );
+  
+    ctx.fill();
+  }
 }
 
-MovingObject.prototype.fixOffScreen = function() {
-	if (this.position["x"] < 0) {
-			this.position["x"] += 1880;
-	} else if(this.position["x"] > 1880) {
-			this.position["x"] -= 1880;
-	} else if(this.position["y"] < 0) {
-			this.position["y"] += 1000;
-	} else if(this.position["y"] > 1000) {
-			this.position["y"] -= 1000;
-	}
+class Asteroids {
+  constructor(numAsteroids, el) {
+    manager = nipplejs.create({ color: '#BF5700' });
+    windowHeight = window.innerHeight;
+    windowWidth = document.body.clientWidth;
+    document.querySelector(el).height = windowHeight - 20;
+    document.querySelector(el).width = document.body.scrollWidth - 10;
+    ctx = document.querySelector(el).getContext('2d');
+
+    this.asteroids = [];
+    this.ship = new Ship(
+      { x: windowWidth / 2, y: windowHeight / 2 },
+      { x: 0, y: 0 }
+    );
+
+    manager.on('move', (evt, data) => {
+      if (data.angle) {
+        this.ship.angle = -1 * (data.angle.radian - (Math.PI / 2));
+        this.ship.power(
+          data.force * 0.1 * Math.cos(this.ship.angle - (Math.PI / 2)),
+          data.force * 0.1 * Math.sin(this.ship.angle - (Math.PI / 2))
+        );
+      }
+
+      this.bullets.push(new Bullet(
+        this.ship.position,
+        {
+          x: Math.cos(this.ship.angle - (Math.PI / 2)) * 10,
+          y: Math.sin(this.ship.angle - (Math.PI / 2)) * 10
+        },
+        1
+      ));
+
+    })
+    this.bullets = [];
+  
+    for(var i = 0; i < numAsteroids; i++){
+      this.asteroids.push(new Asteroid(
+        {
+          x : getRandomInt(0, windowWidth),
+          y : getRandomInt(0, windowHeight),
+        },
+        {
+          x : getRandomInt(-3, 3),
+          y : getRandomInt(-3, 3),
+        },
+        getRandomInt(5, 30)
+      ));
+    }
+  }
+
+  draw(ctx) {
+    ctx.clearRect(0, 0, windowWidth, windowHeight);
+    this.asteroids.forEach(asteroid => asteroid.draw(ctx));
+    this.ship.draw(ctx);
+    this.bullets.forEach(bullet => bullet.draw(ctx));
+  }
+
+  update(ctx) {
+    this.asteroids.forEach(asteroid => {
+      asteroid.update(asteroid.velocity);
+
+      if (asteroid.offScreen()) {
+        asteroid.fixOffScreen();
+      }
+    });
+
+    this.ship.update(this.ship.velocity);
+    
+    if (this.ship.offScreen()) {
+      this.ship.fixOffScreen();
+    }
+
+    this.bullets.forEach(bullet => {
+      bullet.update(bullet.velocity);
+      
+      if (bullet.offScreen()) {
+        bullet = null;
+        // bullet.fixOffScreen();
+      } else {
+        let asteroid = this.asteroids.find(asteroid => {
+          return (
+            bullet.position.x < asteroid.position.x + asteroid.radius &&
+            bullet.position.x > asteroid.position.x - asteroid.radius &&
+            bullet.position.y < asteroid.position.y + asteroid.radius &&
+            bullet.position.y > asteroid.position.y - asteroid.radius
+          );
+        });
+        if (asteroid) {
+          this.asteroids.splice(this.asteroids.indexOf(asteroid), 1);
+          this.asteroids.push(new Asteroid(
+            {
+              x : getRandomInt(0, windowWidth),
+              y : getRandomInt(0, windowHeight),
+            },
+            {
+              x : getRandomInt(-3, 3),
+              y : getRandomInt(-3, 3),
+            },
+            getRandomInt(5, 30)
+          ));
+          bullet = null;
+        }
+      }
+    });
+
+    this.bullets = this.bullets.filter(bullet => bullet);
+    
+  }
+
+  start() {
+    window.setInterval(() => {
+      this.update(ctx);
+      this.draw(ctx);
+    }, 30);
+  }
 }
 
-function Asteroid(position) {
-	this.position = position;
-	this.radius = getRandomInt(5, 30);
-	this.velocity = {
-		x : getRandomInt(-3, 3),
-		y : getRandomInt(-3, 3),
-	}
+class Ship extends MovingObject {
+  constructor(position, velocity) {
+    super(position, velocity)
+    this.angle = 0 * Math.PI;
+  }
 
-}
-Asteroid.inherits(MovingObject);
+  draw(ctx) {
+    ctx.fillStyle = "white";
+    ctx.save();
+    ctx.translate(this.position.x, this.position.y);
+    ctx.rotate(this.angle);
+    ctx.beginPath();
+    ctx.moveTo(0, -15);
+    ctx.lineTo(15, 27);
+    ctx.lineTo(-15, 27);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "black";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+  }
 
-Asteroid.prototype.randomAsteroid = function() {
-	var position = {
-		x : getRandomInt(0, 1880),
-		y : getRandomInt(0, 1000),
-	}
-	var newAsteroid = new Asteroid(position);
-	return newAsteroid;
-}
-
-
-function Game(numAsteroids) {
-	this.asteroids = [];
-	this.ship = new Ship();
-
-	for(var i = 0; i < numAsteroids; i++){
-		this.asteroids.push(Asteroid.prototype.randomAsteroid());
-	}
-}
-
-Game.prototype.draw = function (ctx) {
-	ctx.clearRect(0, 0, 1880, 1000);
-	for(var i = 0, len = this.asteroids.length; i < len; i++ ){
-		this.asteroids[i].draw(ctx);
-	};
-	this.ship.draw(ctx);
+  power(dx, dy) {
+    this.velocity = {
+      x: this.velocity.x += dx,
+      y: this.velocity.y += dy
+    };
+  }
 }
 
-Asteroid.prototype.draw = function (ctx) {
-
-	ctx.fillStyle = "black";
-  ctx.beginPath();
-
-  ctx.arc(
-    this.position["x"],
-    this.position["y"],
-    this.radius,
-    0,
-    2 * Math.PI,
-    false
-  );
-
-  ctx.fill();
-}
-
-Game.prototype.update = function(ctx) {
-
-	var that = this;
-	var asters = this.asteroids
-	for(var i = 0, len = asters.length; i < len; i++ ){
-		asters[i].update(asters[i].velocity);
-
-		if(asters[i].offScreen()) {
-			asters[i].fixOffScreen();
-		}
-	};
-	if(this.ship.offScreen()) {
-		this.ship.fixOffScreen();
-	}
-	if(this.ship.isHit(asters)) {
-		// this.gameOver(ctx);
-		clearInterval(game);
-	}
-	if(key.isPressed("up")) {
-		this.ship.power(Math.sin(this.ship.angle), -1 * Math.cos(this.ship.angle));
-	};
-	// if(key.isPressed("down")) {
-// 		this.ship.power(0, 1);
-// 	};
-	if(key.isPressed("right")) {
-		this.ship.angle += 0.3;
-	};
-	if(key.isPressed("left")) {
-		this.ship.angle -= 0.3;
-	};
-	this.ship.update(this.ship.velocity);
-}
-
-// Game.prototype.gameOver = function(ctx) {
-// 	ctx.fillStyle = "black";
-// 	ctx.font = "italic 96px Arial";
-// 	ctx.strokeStyle = "blue";
-// 	ctx.stroke();
-// 	ctx.fillText("GAME OVER", 20,150);
-// }
-
-Game.prototype.start = function (ctx) {
-
-	var that = this;
-	game = window.setInterval(function () {
-		that.update(ctx);
-		that.draw(ctx);
-	}, 30);
-}
-
-function Ship() {
-	this.position = { x: 400, y: 400 };
-	this.angle = 0 * Math.PI;
-	this.velocity = {
-		x: 0,
-		y: 0
-	}
-}
-Ship.inherits(MovingObject);
-
-Ship.prototype.draw = function(ctx) {
-	var x = this.position["x"];
-	var y = this.position["y"];
-
-	ctx.fillStyle = "white";
-	ctx.save();
-	ctx.translate(x, y);
-	ctx.rotate(this.angle);
-	ctx.beginPath();
-	ctx.moveTo(0, -15);
-	ctx.lineTo(15, 27);
-	ctx.lineTo(-15, 27);
-	ctx.closePath();
-	ctx.fill();
-	ctx.strokeStyle = "black";
-	ctx.lineWidth = 2;
-	ctx.stroke();
-
-	ctx.restore();
-
-}
-
-Ship.prototype.power = function(dx, dy) {
-	this.velocity["x"] += dx;
-	this.velocity["y"] += dy
-}
-
-
-Ship.prototype.isHit = function(asteroids) {
-	 var shipCenterPos = {
-			x: this.position["x"],
-			y: this.position["y"] + 10
-	}
-
-	var shipX = shipCenterPos["x"];
-	var shipY = shipCenterPos["y"];
-
-	for(var i = 0, len = asteroids.length; i < len; i++) {
-		var xDistance = (shipX - asteroids[i].position["x"]);
-		var yDistance = (shipY - asteroids[i].position["y"]);
-		var distance = Math.sqrt((xDistance * xDistance) + (yDistance * yDistance));
-		var radii = 10 + asteroids[i].radius;
-
-		if(distance < radii) {
-			return true;
-		}
-	}
-	return false;
-
+class Bullet extends Asteroid {
+  constructor(position, velocity, radius) {
+    super(position, velocity, radius);
+  }
 }
