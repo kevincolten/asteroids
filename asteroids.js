@@ -65,11 +65,11 @@ class Asteroid extends MovingObject {
 
 class Asteroids {
   constructor(numAsteroids, el) {
-    manager = nipplejs.create({
-      // zone: document.querySelector('#control'),
-      color: 'blue',
-      // mode: 'static'
-    });
+    // manager = nipplejs.create({
+    //   // zone: document.querySelector('#control'),
+    //   color: 'blue',
+    //   // mode: 'static'
+    // });
     windowHeight = window.innerHeight;
     windowWidth = document.body.clientWidth;
     document.querySelector(el).height = windowHeight - 20;
