@@ -5,9 +5,10 @@ function getRandomInt (min, max) {
 }
 
 class MovingObject {
-  constructor(position, velocity) {
+  constructor(position, velocity, color) {
     this.position = position;
     this.velocity = velocity;
+    this.color = color;
   }
 
   update(velocity) {
@@ -41,13 +42,13 @@ class MovingObject {
 }
 
 class Asteroid extends MovingObject {
-  constructor(position, velocity, radius) {
-    super(position, velocity);
+  constructor(position, velocity, color, radius) {
+    super(position, velocity, color);
     this.radius = radius;
   }
 
   draw(ctx) {
-    ctx.fillStyle = "rgba(0, 0, 0, 0.10)";
+    ctx.fillStyle = this.color;
     ctx.beginPath();
   
     ctx.arc(
@@ -65,43 +66,45 @@ class Asteroid extends MovingObject {
 
 class Asteroids {
   constructor(numAsteroids, el) {
-    // manager = nipplejs.create({
-    //   // zone: document.querySelector('#control'),
-    //   color: 'blue',
-    //   // mode: 'static'
-    // });
+    manager = nipplejs.create({
+      zone: document.querySelector('#control'),
+      color: 'blue',
+      mode: 'static'
+    });
     windowHeight = window.innerHeight;
     windowWidth = document.body.clientWidth;
     document.querySelector(el).height = windowHeight - 20;
     document.querySelector(el).width = document.body.scrollWidth - 10;
     ctx = document.querySelector(el).getContext('2d');
+    window.dispatchEvent(new Event('resize'));
 
     this.asteroids = [];
-    // this.ship = new Ship(
-    //   { x: windowWidth / 2, y: windowHeight / 2 },
-    //   { x: 0, y: 0 }
-    // );
+    this.ship = new Ship(
+      { x: windowWidth / 2, y: windowHeight / 2 },
+      { x: 0, y: 0 }
+    );
 
-    // manager.on('move', (evt, data) => {
-    //   if (data.angle) {
-    //     this.ship.angle = -1 * (data.angle.radian - (Math.PI / 2));
-    //     this.ship.power(
-    //       data.force * 0.1 * Math.cos(this.ship.angle - (Math.PI / 2)),
-    //       data.force * 0.1 * Math.sin(this.ship.angle - (Math.PI / 2))
-    //     );
-    //   }
+    manager.on('move', (evt, data) => {
+      if (data.angle) {
+        this.ship.angle = -1 * (data.angle.radian - (Math.PI / 2));
+        this.ship.power(
+          data.force * 0.1 * Math.cos(this.ship.angle - (Math.PI / 2)),
+          data.force * 0.1 * Math.sin(this.ship.angle - (Math.PI / 2))
+        );
+      }
 
-    //   this.bullets.push(new Bullet(
-    //     this.ship.position,
-    //     {
-    //       x: Math.cos(this.ship.angle - (Math.PI / 2)) * 10,
-    //       y: Math.sin(this.ship.angle - (Math.PI / 2)) * 10
-    //     },
-    //     1
-    //   ));
+      this.bullets.push(new Bullet(
+        this.ship.position,
+        {
+          x: Math.cos(this.ship.angle - (Math.PI / 2)) * 10,
+          y: Math.sin(this.ship.angle - (Math.PI / 2)) * 10
+        },
+        'black',
+        1
+      ));
 
-    // })
-    // this.bullets = [];
+    })
+    this.bullets = [];
   
     for(var i = 0; i < numAsteroids; i++){
       this.asteroids.push(new Asteroid(
@@ -113,6 +116,7 @@ class Asteroids {
           x : getRandomInt(-3, 3),
           y : getRandomInt(-3, 3),
         },
+        "rgba(0, 0, 0, 0.10)",
         getRandomInt(5, 30)
       ));
     }
@@ -121,7 +125,7 @@ class Asteroids {
   draw(ctx) {
     ctx.clearRect(0, 0, windowWidth, windowHeight);
     this.asteroids.forEach(asteroid => asteroid.draw(ctx));
-    // this.ship.draw(ctx);
+    this.ship.draw(ctx);
     this.bullets.forEach(bullet => bullet.draw(ctx));
   }
 
@@ -134,46 +138,47 @@ class Asteroids {
       }
     });
 
-    // this.ship.update(this.ship.velocity);
+    this.ship.update(this.ship.velocity);
     
-    // if (this.ship.offScreen()) {
-    //   this.ship.fixOffScreen();
-    // }
+    if (this.ship.offScreen()) {
+      this.ship.fixOffScreen();
+    }
 
-    // this.bullets.forEach(bullet => {
-    //   bullet.update(bullet.velocity);
+    this.bullets.forEach(bullet => {
+      bullet.update(bullet.velocity);
       
-    //   if (bullet.offScreen()) {
-    //     bullet = null;
-    //     // bullet.fixOffScreen();
-    //   } else {
-    //     let asteroid = this.asteroids.find(asteroid => {
-    //       return (
-    //         bullet.position.x < asteroid.position.x + asteroid.radius &&
-    //         bullet.position.x > asteroid.position.x - asteroid.radius &&
-    //         bullet.position.y < asteroid.position.y + asteroid.radius &&
-    //         bullet.position.y > asteroid.position.y - asteroid.radius
-    //       );
-    //     });
-    //     if (asteroid) {
-    //       this.asteroids.splice(this.asteroids.indexOf(asteroid), 1);
-    //       this.asteroids.push(new Asteroid(
-    //         {
-    //           x : getRandomInt(0, windowWidth),
-    //           y : getRandomInt(0, windowHeight),
-    //         },
-    //         {
-    //           x : getRandomInt(-3, 3),
-    //           y : getRandomInt(-3, 3),
-    //         },
-    //         getRandomInt(5, 30)
-    //       ));
-    //       bullet = null;
-    //     }
-    //   }
-    // });
+      if (bullet.offScreen()) {
+        bullet = null;
+        // bullet.fixOffScreen();
+      } else {
+        let asteroid = this.asteroids.find(asteroid => {
+          return (
+            bullet.position.x < asteroid.position.x + asteroid.radius &&
+            bullet.position.x > asteroid.position.x - asteroid.radius &&
+            bullet.position.y < asteroid.position.y + asteroid.radius &&
+            bullet.position.y > asteroid.position.y - asteroid.radius
+          );
+        });
+        if (asteroid) {
+          this.asteroids.splice(this.asteroids.indexOf(asteroid), 1);
+          this.asteroids.push(new Asteroid(
+            {
+              x : getRandomInt(0, windowWidth),
+              y : getRandomInt(0, windowHeight),
+            },
+            {
+              x : getRandomInt(-3, 3),
+              y : getRandomInt(-3, 3),
+            },
+            "rgba(0, 0, 0, 0.10)",
+            getRandomInt(5, 30)
+          ));
+          bullet = null;
+        }
+      }
+    });
 
-    // this.bullets = this.bullets.filter(bullet => bullet);
+    this.bullets = this.bullets.filter(bullet => bullet);
     
   }
 
@@ -186,7 +191,7 @@ class Asteroids {
 }
 
 class Ship extends MovingObject {
-  constructor(position, velocity) {
+  constructor(position, velocity, color) {
     super(position, velocity)
     this.angle = 0 * Math.PI;
   }
@@ -202,7 +207,7 @@ class Ship extends MovingObject {
     ctx.lineTo(-15, 27);
     ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = "black";
+    ctx.strokeStyle = this.color;
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.restore();
@@ -217,7 +222,7 @@ class Ship extends MovingObject {
 }
 
 class Bullet extends Asteroid {
-  constructor(position, velocity, radius) {
-    super(position, velocity, radius);
+  constructor(position, velocity, color, radius) {
+    super(position, velocity, color, radius);
   }
 }
