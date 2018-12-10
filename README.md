@@ -10,8 +10,8 @@ Asteroids!
 </head>
 <body>
   <canvas id="canvas"></canvas>
-  <script src="https://cdn.rawgit.com/yoannmoinet/nipplejs/master/dist/nipplejs.min.js"></script>
-  <script src="https://cdn.rawgit.com/kevincolten/asteroids/master/asteroids.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/yoannmoinet/nipplejs@master/dist/nipplejs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/kevincolten/asteroids@master/asteroids.js"></script>
   <script>
     const game = new Asteroids(10, 'canvas');
     game.start();
